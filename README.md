@@ -38,7 +38,6 @@ We'd love to see what you create with this. Tweet us [@cloudflaredev](https://tw
 
 ## Thanks
 
-![braintrust](https://github.com/user-attachments/assets/8bb134ba-599e-452e-880a-ae35b31d065c)
-
+![braintrust](https://github.com/user-attachments/assets/5eb1bb08-bdd0-462d-816c-83c03d618add)
 
 We built this in collaboration with the folks at [Braintrust](https://www.braintrust.dev/).
