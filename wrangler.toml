@@ -1,0 +1,8 @@
+name = "openai-workers-relay"
+main = "src/index.ts"
+compatibility_date = "2024-10-10"
+
+# This will deploy the project by default to openai-workers-relay.<username>.workers.dev. 
+# You can modify this by changing the name of the project in wrangler.toml, 
+# and/or setting the `routes` param in this file. Learn more at 
+# https://developers.cloudflare.com/workers/configuration/routing/routes/#set-up-a-route-in-wranglertoml 
