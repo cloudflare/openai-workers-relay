@@ -1,3 +1,6 @@
+// Copyright (c) 2017-2020 Cloudflare, Inc.
+// Licensed under the MIT license found in the LICENSE file or at https://opensource.org/licenses/MIT
+
 import { RealtimeClient } from "@openai/realtime-api-beta";
 
 type Env = {
