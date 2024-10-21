@@ -7,7 +7,19 @@ type Env = {
   OPENAI_API_KEY: string;
 };
 
+const DEBUG = false; // set as true to see debug logs
 const MODEL = "gpt-4o-realtime-preview-2024-10-01";
+const OPENAI_URL = "wss://api.openai.com/v1/realtime";
+
+function owrLog(...args: unknown[]) {
+  if (DEBUG) {
+    console.log("[owr]", ...args);
+  }
+}
+
+function owrError(...args: unknown[]) {
+  console.error("[owr error]", ...args);
+}
 
 async function createRealtimeClient(
   request: Request,
@@ -15,11 +27,9 @@ async function createRealtimeClient(
   ctx: ExecutionContext
 ) {
   const webSocketPair = new WebSocketPair();
-  const [client, server] = Object.values(webSocketPair);
+  const [clientSocket, serverSocket] = Object.values(webSocketPair);
 
-  let realtimeClient: RealtimeClient | null = null;
-
-  server.accept();
+  serverSocket.accept();
 
   // Copy protocol headers
   const responseHeaders = new Headers();
@@ -32,59 +42,67 @@ async function createRealtimeClient(
       responseHeaders.set("Sec-WebSocket-Protocol", "realtime");
     }
 
-    for (const protocol of requestedProtocols) {
-      if (protocol.startsWith("openai-insecure-api-key.")) {
-        const parsedApiKey = protocol
-          .slice("openai-insecure-api-key.".length)
-          .trim();
-        if (parsedApiKey.length > 0 && parsedApiKey !== "null") {
-          apiKey = parsedApiKey;
-        }
-      }
-    }
+    // uncomment this to use an api key from the client
+
+    // for (const protocol of requestedProtocols) {
+    //   if (protocol.startsWith("openai-insecure-api-key.")) {
+    //     const parsedApiKey = protocol
+    //       .slice("openai-insecure-api-key.".length)
+    //       .trim();
+    //     if (parsedApiKey.length > 0 && parsedApiKey !== "null") {
+    //       apiKey = parsedApiKey;
+    //     }
+    //   }
+    // }
   }
 
-  const url = new URL(request.url);
-  const model = url.searchParams.get("model") ?? MODEL;
-
   if (!apiKey) {
+    owrError(
+      "Missing OpenAI API key. Did you forget to set OPENAI_API_KEY in .dev.vars (for local dev) or with wrangler secret put OPENAI_API_KEY (for production)?"
+    );
     return new Response("Missing API key", { status: 401 });
   }
 
+  let realtimeClient: RealtimeClient | null = null;
+
   // Create RealtimeClient
   try {
-    console.log("Creating RealtimeClient");
+    owrLog("Creating OpenAIRealtimeClient");
     realtimeClient = new RealtimeClient({
       apiKey,
+      debug: DEBUG,
+      url: OPENAI_URL,
     });
   } catch (e) {
-    console.error(`Error creating RealtimeClient: ${e}`);
-    server.close();
-    return new Response("Error creating RealtimeClient", { status: 500 });
+    owrError("Error creating OpenAI RealtimeClient", e);
+    serverSocket.close();
+    return new Response("Error creating OpenAI RealtimeClient", {
+      status: 500,
+    });
   }
 
   // Relay: OpenAI Realtime API Event -> Client
   realtimeClient.realtime.on("server.*", (event: { type: string }) => {
-    // console.log(`Relaying "${event.type}" to Client`);
-    server.send(JSON.stringify(event));
+    serverSocket.send(JSON.stringify(event));
   });
 
-  realtimeClient.realtime.on("close", () => {
-    console.log("Closing server-side because I received a close event");
-    server.close();
+  realtimeClient.realtime.on("close", (metadata: { error: boolean }) => {
+    owrLog(
+      `Closing server-side because I received a close event: (error: ${metadata.error})`
+    );
+    serverSocket.close();
   });
 
   // Relay: Client -> OpenAI Realtime API Event
   const messageQueue: string[] = [];
 
-  server.addEventListener("message", (event: MessageEvent) => {
+  serverSocket.addEventListener("message", (event: MessageEvent) => {
     const messageHandler = (data: string) => {
       try {
         const parsedEvent = JSON.parse(data);
-        // console.log(`Relaying "${event.type}" to OpenAI`);
         realtimeClient.realtime.send(parsedEvent.type, parsedEvent);
       } catch (e) {
-        console.error(`Error parsing event from client: ${data}`);
+        owrError("Error parsing event from client", data);
       }
     };
 
@@ -97,35 +115,44 @@ async function createRealtimeClient(
     }
   });
 
-  server.addEventListener("close", () => {
-    console.log("Closing server-side because the client closed the connection");
+  serverSocket.addEventListener("close", ({ code, reason }) => {
+    owrLog(
+      `Closing server-side because the client closed the connection: ${code} ${reason}`
+    );
     realtimeClient.disconnect();
+    messageQueue.length = 0;
   });
+
+  let model: string | undefined = MODEL;
+
+  // uncomment this to use a model from the client
+
+  // const modelParam = new URL(request.url).searchParams.get("model");
+  // if (modelParam) {
+  //   model = modelParam;
+  // }
 
   // Connect to OpenAI Realtime API
   try {
-    console.log(`Connecting to OpenAI...`);
-    await realtimeClient.connect();
-    console.log(`Connected to OpenAI successfully!`);
+    owrLog(`Connecting to OpenAI...`);
+    // @ts-expect-error Waiting on https://github.com/openai/openai-realtime-api-beta/pull/52
+    await realtimeClient.connect({ model });
+    owrLog(`Connected to OpenAI successfully!`);
     while (messageQueue.length) {
       const message = messageQueue.shift();
       if (message) {
-        server.send(message);
+        serverSocket.send(message);
       }
     }
   } catch (e) {
-    if (e instanceof Error) {
-      console.error(`Error connecting to OpenAI: ${e.message}`);
-    } else {
-      console.error(`Error connecting to OpenAI: ${e}`);
-    }
+    owrError("Error connecting to OpenAI", e);
     return new Response("Error connecting to OpenAI", { status: 500 });
   }
 
   return new Response(null, {
     status: 101,
     headers: responseHeaders,
-    webSocket: client,
+    webSocket: clientSocket,
   });
 }
 
@@ -135,6 +162,9 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ): Promise<Response> {
+    // This would be a good place to add logic for
+    // authentication, rate limiting, etc.
+    // You could also do matching on the path or other things here.
     const upgradeHeader = request.headers.get("Upgrade");
     if (upgradeHeader === "websocket") {
       return createRealtimeClient(request, env, ctx);
