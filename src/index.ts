@@ -41,19 +41,6 @@ async function createRealtimeClient(
       // Not exactly sure why this protocol needs to be accepted
       responseHeaders.set("Sec-WebSocket-Protocol", "realtime");
     }
-
-    // uncomment this to use an api key from the client
-
-    // for (const protocol of requestedProtocols) {
-    //   if (protocol.startsWith("openai-insecure-api-key.")) {
-    //     const parsedApiKey = protocol
-    //       .slice("openai-insecure-api-key.".length)
-    //       .trim();
-    //     if (parsedApiKey.length > 0 && parsedApiKey !== "null") {
-    //       apiKey = parsedApiKey;
-    //     }
-    //   }
-    // }
   }
 
   if (!apiKey) {
