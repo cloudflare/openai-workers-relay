@@ -4,7 +4,7 @@ _NB: This project is considered beta, because the underlying OpenAI Realtime API
 
 ## Usage
 
-The included [server](./src/server.ts) should work out of the box with the official example [openai-realtime-console](https://github.com/openai/openai-realtime-console/) application. You can copy paste code out of it into your Worker, or just deploy this one directly. Feel free to modify the code and configuration to fit your needs.
+The included [server](./src/index.ts) should work out of the box with the official example [openai-realtime-console](https://github.com/openai/openai-realtime-console/) application. You can copy paste code out of it into your Worker, or just deploy this one directly. Feel free to modify the code and configuration to fit your needs.
 
 ### Add an OPENAI_API_KEY to your secrets
 
