@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 Cloudflare, Inc.
+// Copyright (c) 2024 Cloudflare, Inc.
 // Licensed under the MIT license found in the LICENSE file or at https://opensource.org/licenses/MIT
 
 import { RealtimeClient } from "@openai/realtime-api-beta";
@@ -112,7 +112,7 @@ async function createRealtimeClient(
 
   let model: string | undefined = MODEL;
 
-  // uncomment this to use a model from the client
+  // uncomment this to use a model from specified by the client
 
   // const modelParam = new URL(request.url).searchParams.get("model");
   // if (modelParam) {

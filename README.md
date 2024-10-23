@@ -32,6 +32,14 @@ We recommend that you add a layer of authorisation on top of this relay server. 
 
 If you're deploying this server to a completely different domain, then you'll have to add a layer of auth on top of the WebSocket connection. Since the standard WebSocket api doesn't support adding cookies or any other headers, you'll have to layer it on top of the URL/protocols when making the connection. For example, you could generate an encrypted short lived token in your existing webapp, add it to the WebSocket url's query params, and then decode it in the Worker to verify the provenance of the request.
 
+### Develop locally
+
+To develop locally, you can run `npm start` and then connect to the local server at `ws://localhost:8787`.
+
+### Deploy to production
+
+To deploy to production, you can run `npm run deploy` and then connect to the production server at `wss://<your-worker-name>.<username>.workers.dev` (or any custom routes/domains [that you setup in `wrangler.toml`](https://developers.cloudflare.com/workers/configuration/routing/routes/#set-up-a-route-in-wranglertoml))
+
 ## Show us what you made!
 
 We'd love to see what you create with this. Tweet us [@cloudflaredev](https://twitter.com/cloudflaredev) and let us know what you're building!
