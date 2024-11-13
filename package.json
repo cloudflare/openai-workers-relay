@@ -14,8 +14,8 @@
     "@openai/realtime-api-beta": "github:openai/openai-realtime-api-beta"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20241022.0",
+    "@cloudflare/workers-types": "^4.20241112.0",
     "typescript": "^5.6.3",
-    "wrangler": "^3.84.1"
+    "wrangler": "^3.86.1"
   }
 }
