@@ -26,9 +26,9 @@ npx wrangler secret put OPENAI_API_KEY
 
 Then, after you deploy your project, the API key will be available in your request's `env` object as `env.OPENAI_API_KEY`.
 
-### Add authorisation, rate limiting, or anything else!
+### Add authorization, rate limiting, or anything else!
 
-We recommend that you add a layer of authorisation on top of this relay server. This will prevent any random person from using relay, and your OpenAI key! If you're deploying this relay server as part of another Workers project, then it should be fairly straightforward to leverage the authorisation and rate limiting already in place there.
+We recommend that you add a layer of authorization on top of this relay server. This will prevent any random person from using relay, and your OpenAI key! If you're deploying this relay server as part of another Workers project, then it should be fairly straightforward to leverage the authorization and rate limiting already in place there.
 
 If you're deploying this server to a completely different domain, then you'll have to add a layer of auth on top of the WebSocket connection. Since the standard WebSocket api doesn't support adding cookies or any other headers, you'll have to layer it on top of the URL/protocols when making the connection. For example, you could generate an encrypted short lived token in your existing webapp, add it to the WebSocket url's query params, and then decode it in the Worker to verify the provenance of the request.
 
